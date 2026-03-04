@@ -85,39 +85,87 @@ def run_shap_explanations(model, X_train, X_val, feature_names):
             outputs = model(x_tensor)
         return outputs.numpy()
 
+    print("  Calculating SHAP values (this may take a minute)...")
     background = shap.sample(X_train, 50) 
     explainer = shap.KernelExplainer(model_predict_wrapper, background)
+    
+    # We'll explain a small sample of the validation set for performance
     test_sample = X_val[:20]
     shap_values = np.squeeze(explainer.shap_values(test_sample))
     
     os.makedirs('explanation_plots', exist_ok=True)
     plt.rcParams.update({'font.size': 12, 'figure.autolayout': True})
     
-    # Summary Plot
+    # 1. Summary Plot (Important Features Overall + Direction)
+    print("  Generating Summary Plot...")
     plt.figure(figsize=(12, 8))
     shap.summary_plot(shap_values, test_sample, feature_names=feature_names, show=False)
-    plt.title("SHAP Global Summary Plot", fontsize=16, pad=20)
+    plt.title("SHAP Global Summary Plot: Feature Impact on Loan Approval", fontsize=16, pad=20)
     plt.savefig('explanation_plots/shap_summary_plot.png', bbox_inches='tight', dpi=300)
     plt.close()
     
-    # Force Plot
-    instance_idx = 0
+    # 2. Global Feature Importance Ranking (Bar Plot)
+    print("  Generating Bar Plot (Importance Ranking)...")
     exp_val = explainer.expected_value
     if isinstance(exp_val, (list, np.ndarray)) and len(exp_val) > 0:
         exp_val = exp_val[0]
-    plt.figure(figsize=(15, 5))
-    shap.force_plot(exp_val, shap_values[instance_idx], test_sample[instance_idx], feature_names=feature_names, matplotlib=True, show=False)
-    plt.title(f"SHAP Local Force Plot (Instance {instance_idx})", fontsize=16, pad=30)
-    plt.savefig(f'explanation_plots/shap_force_plot_instance_{instance_idx}.png', bbox_inches='tight', dpi=300)
+        
+    explanation = shap.Explanation(
+        values=shap_values, 
+        base_values=np.array([exp_val]*len(shap_values)), 
+        data=test_sample, 
+        feature_names=feature_names
+    )
+    
+    plt.figure(figsize=(12, 8))
+    shap.plots.bar(explanation, show=False)
+    plt.title("Global Feature Importance Ranking", fontsize=16, pad=20)
+    plt.savefig('explanation_plots/shap_feature_importance_ranking.png', bbox_inches='tight', dpi=300)
     plt.close()
     
-    # Bar Plot
-    plt.figure(figsize=(12, 8))
-    explanation = shap.Explanation(values=shap_values, base_values=np.array([exp_val]*len(shap_values)), data=test_sample, feature_names=feature_names)
-    shap.plots.bar(explanation, show=False)
-    plt.title("SHAP Global Feature Importance (Bar Plot)", fontsize=16, pad=20)
-    plt.savefig('explanation_plots/shap_bar_plot.png', bbox_inches='tight', dpi=300)
+    # 3. Local Explainability: Force Plot (Individual Applicant)
+    print("  Generating Force Plot for instance 0...")
+    instance_idx = 0
+    # Use matplotlib for the force plot to save it
+    shap.force_plot(
+        exp_val, 
+        shap_values[instance_idx], 
+        test_sample[instance_idx], 
+        feature_names=feature_names, 
+        matplotlib=True, 
+        show=False
+    )
+    plt.title(f"SHAP Local Force Plot: Applicant {instance_idx}", fontsize=14, pad=30)
+    plt.savefig(f'explanation_plots/shap_force_plot_applicant_{instance_idx}.png', bbox_inches='tight', dpi=300)
     plt.close()
+    
+    # 4. Local Explainability: Waterfall Plot (Individual Applicant)
+    print("  Generating Waterfall Plot for instance 0...")
+    plt.figure(figsize=(12, 8))
+    # Create an explanation object for a single instance
+    single_explanation = shap.Explanation(
+        values=shap_values[instance_idx],
+        base_values=exp_val,
+        data=test_sample[instance_idx],
+        feature_names=feature_names
+    )
+    shap.plots.waterfall(single_explanation, show=False)
+    plt.title(f"SHAP Waterfall Plot: Contribution Analysis (Applicant {instance_idx})", fontsize=14, pad=20)
+    plt.savefig(f'explanation_plots/shap_waterfall_plot_applicant_{instance_idx}.png', bbox_inches='tight', dpi=300)
+    plt.close()
+    
+    # 5. Local Explainability: Feature Contribution Table
+    print("  Generating Feature Contribution Table...")
+    contributions = pd.DataFrame({
+        'Feature': feature_names,
+        'Feature Value': test_sample[instance_idx],
+        'SHAP Value (Contribution)': shap_values[instance_idx]
+    })
+    # Sort by absolute contribution
+    contributions['Abs Contribution'] = contributions['SHAP Value (Contribution)'].abs()
+    contributions = contributions.sort_values(by='Abs Contribution', ascending=False).drop('Abs Contribution', axis=1)
+    contributions.to_csv('explanation_plots/feature_contribution_table.csv', index=False)
+    print(f"  Feature contribution table saved to explanation_plots/feature_contribution_table.csv")
 
 if __name__ == "__main__":
     # Determine absolute paths relative to this script's location
@@ -125,12 +173,16 @@ if __name__ == "__main__":
     train_path = os.path.join(base_dir, 'data', 'train_u6lujuX_CVtuZ9i.csv')
     test_path = os.path.join(base_dir, 'data', 'test_Y3wMUE5_7gLdaTN.csv')
 
+    print("Preprocessing data...")
     X_orig, X_scaled, y = preprocess_data(train_path, test_path)
     X_train, X_val, y_train, y_val = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
     
-    print("Training model...")
+    print(f"Training model on {X_train.shape[0]} samples...")
     model = train_model(X_train, y_train, X_val, y_val)
     
     print("Running SHAP explanations...")
     run_shap_explanations(model, X_train, X_val, X_orig.columns.tolist())
-    print("Done. Plots saved in explanation_plots/")
+    print("-" * 30)
+    print("SUCCESS: All SHAP and Explainability outputs generated.")
+    print("Check 'explanation_plots/' directory for results.")
+    print("-" * 30)
