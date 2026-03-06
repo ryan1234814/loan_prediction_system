@@ -74,7 +74,7 @@ def train_model(X_train, y_train):
     
     model = LoanModel(X_train.shape[1])
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=0.005, weight_decay=1e-5)
     
     for epoch in range(100):
         model.train()
@@ -83,6 +83,8 @@ def train_model(X_train, y_train):
         loss = criterion(outputs, y_train_t)
         loss.backward()
         optimizer.step()
+        if (epoch+1) % 20 == 0:
+            print(f"Epoch {epoch+1}/100 - Loss: {loss.item():.4f}")
     
     return model
 
