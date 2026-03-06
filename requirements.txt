@@ -4,3 +4,6 @@ scikit-learn
 shap
 matplotlib
 numpy
+joblib
+flask
+flask-cors

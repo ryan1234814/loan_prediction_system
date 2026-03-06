@@ -9,7 +9,7 @@ from sklearn.impute import SimpleImputer
 import shap
 import matplotlib.pyplot as plt
 import os
-
+import joblib
 
 # 3. Define PyTorch Model
 class LoanModel(nn.Module):
@@ -27,13 +27,12 @@ class LoanModel(nn.Module):
         x = self.sigmoid(self.output(x))
         return x
 
-def preprocess_data(train_path, test_path):
+def preprocess_data(train_path):
     train_df = pd.read_csv(train_path)
-    test_df = pd.read_csv(test_path)
     
     # Drop Loan_ID
-    train_df = train_df.drop('Loan_ID', axis=1)
-    test_df = test_df.drop('Loan_ID', axis=1)
+    if 'Loan_ID' in train_df.columns:
+        train_df = train_df.drop('Loan_ID', axis=1)
     
     target = 'Loan_Status'
     y = train_df[target].map({'Y': 1, 'N': 0})
@@ -48,20 +47,30 @@ def preprocess_data(train_path, test_path):
     X[cat_cols] = imputer_cat.fit_transform(X[cat_cols])
     X[num_cols] = imputer_num.fit_transform(X[num_cols])
     
+    label_encoders = {}
     for col in cat_cols:
         le = LabelEncoder()
         X[col] = le.fit_transform(X[col])
+        label_encoders[col] = le
         
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
-    return X, X_scaled, y
+    artifacts = {
+        'imputer_cat': imputer_cat,
+        'imputer_num': imputer_num,
+        'label_encoders': label_encoders,
+        'scaler': scaler,
+        'feature_names': X.columns.tolist(),
+        'cat_cols': cat_cols.tolist(),
+        'num_cols': num_cols.tolist()
+    }
+    
+    return X, X_scaled, y, artifacts
 
-def train_model(X_train, y_train, X_val, y_val):
+def train_model(X_train, y_train):
     X_train_t = torch.tensor(X_train, dtype=torch.float32)
     y_train_t = torch.tensor(y_train.values, dtype=torch.float32).unsqueeze(1)
-    X_val_t = torch.tensor(X_val, dtype=torch.float32)
-    y_val_t = torch.tensor(y_val.values, dtype=torch.float32).unsqueeze(1)
     
     model = LoanModel(X_train.shape[1])
     criterion = nn.BCELoss()
@@ -76,6 +85,19 @@ def train_model(X_train, y_train, X_val, y_val):
         optimizer.step()
     
     return model
+
+def save_artifacts(model, artifacts, folder='model_artifacts'):
+    os.makedirs(folder, exist_ok=True)
+    torch.save(model.state_dict(), os.path.join(folder, 'loan_model.pth'))
+    joblib.dump(artifacts, os.path.join(folder, 'preprocessing_artifacts.joblib'))
+    print(f"Artifacts saved to {folder}")
+
+def load_all_artifacts(folder='model_artifacts'):
+    artifacts = joblib.load(os.path.join(folder, 'preprocessing_artifacts.joblib'))
+    model = LoanModel(len(artifacts['feature_names']))
+    model.load_state_dict(torch.load(os.path.join(folder, 'loan_model.pth')))
+    model.eval()
+    return model, artifacts
 
 def run_shap_explanations(model, X_train, X_val, feature_names):
     model.eval()
@@ -122,67 +144,23 @@ def run_shap_explanations(model, X_train, X_val, feature_names):
     plt.title("Global Feature Importance Ranking", fontsize=16, pad=20)
     plt.savefig('explanation_plots/shap_feature_importance_ranking.png', bbox_inches='tight', dpi=300)
     plt.close()
-    
-    # 3. Local Explainability: Force Plot (Individual Applicant)
-    print("  Generating Force Plot for instance 0...")
-    instance_idx = 0
-    # Use matplotlib for the force plot to save it
-    shap.force_plot(
-        exp_val, 
-        shap_values[instance_idx], 
-        test_sample[instance_idx], 
-        feature_names=feature_names, 
-        matplotlib=True, 
-        show=False
-    )
-    plt.title(f"SHAP Local Force Plot: Applicant {instance_idx}", fontsize=14, pad=30)
-    plt.savefig(f'explanation_plots/shap_force_plot_applicant_{instance_idx}.png', bbox_inches='tight', dpi=300)
-    plt.close()
-    
-    # 4. Local Explainability: Waterfall Plot (Individual Applicant)
-    print("  Generating Waterfall Plot for instance 0...")
-    plt.figure(figsize=(12, 8))
-    # Create an explanation object for a single instance
-    single_explanation = shap.Explanation(
-        values=shap_values[instance_idx],
-        base_values=exp_val,
-        data=test_sample[instance_idx],
-        feature_names=feature_names
-    )
-    shap.plots.waterfall(single_explanation, show=False)
-    plt.title(f"SHAP Waterfall Plot: Contribution Analysis (Applicant {instance_idx})", fontsize=14, pad=20)
-    plt.savefig(f'explanation_plots/shap_waterfall_plot_applicant_{instance_idx}.png', bbox_inches='tight', dpi=300)
-    plt.close()
-    
-    # 5. Local Explainability: Feature Contribution Table
-    print("  Generating Feature Contribution Table...")
-    contributions = pd.DataFrame({
-        'Feature': feature_names,
-        'Feature Value': test_sample[instance_idx],
-        'SHAP Value (Contribution)': shap_values[instance_idx]
-    })
-    # Sort by absolute contribution
-    contributions['Abs Contribution'] = contributions['SHAP Value (Contribution)'].abs()
-    contributions = contributions.sort_values(by='Abs Contribution', ascending=False).drop('Abs Contribution', axis=1)
-    contributions.to_csv('explanation_plots/feature_contribution_table.csv', index=False)
-    print(f"  Feature contribution table saved to explanation_plots/feature_contribution_table.csv")
 
 if __name__ == "__main__":
-    # Determine absolute paths relative to this script's location
     base_dir = os.path.abspath(os.path.dirname(__file__))
     train_path = os.path.join(base_dir, 'data', 'train_u6lujuX_CVtuZ9i.csv')
-    test_path = os.path.join(base_dir, 'data', 'test_Y3wMUE5_7gLdaTN.csv')
 
     print("Preprocessing data...")
-    X_orig, X_scaled, y = preprocess_data(train_path, test_path)
+    X_orig, X_scaled, y, artifacts = preprocess_data(train_path)
     X_train, X_val, y_train, y_val = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
     
     print(f"Training model on {X_train.shape[0]} samples...")
-    model = train_model(X_train, y_train, X_val, y_val)
+    model = train_model(X_train, y_train)
+    
+    print("Saving model and artifacts...")
+    save_artifacts(model, artifacts)
     
     print("Running SHAP explanations...")
     run_shap_explanations(model, X_train, X_val, X_orig.columns.tolist())
     print("-" * 30)
-    print("SUCCESS: All SHAP and Explainability outputs generated.")
-    print("Check 'explanation_plots/' directory for results.")
+    print("SUCCESS: Model trained and saved.")
     print("-" * 30)
