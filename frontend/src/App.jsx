@@ -10,6 +10,13 @@ import './App.css';
 
 const API_BASE = 'http://localhost:5001';
 
+const formatLabel = (col) => {
+  return col
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
 function App() {
   const [metadata, setMetadata] = useState(null);
   const [formData, setFormData] = useState({});
@@ -93,7 +100,7 @@ function App() {
 
       <div className="grid">
         {/* Form Section */}
-        <div className="glass-card">
+        <div className="glass-card form-card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
             <User size={24} color="var(--primary)" />
             <h2 style={{ margin: 0 }}>Applicant Details</h2>
@@ -102,10 +109,14 @@ function App() {
           <form onSubmit={handleSubmit}>
             {metadata && (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-section-label">
+                  <CreditCard size={16} color="var(--text-secondary)" />
+                  <span>Personal Information</span>
+                </div>
+                <div className="form-grid">
                   {metadata.cat_cols.map(col => (
                     <div key={col} className="form-group">
-                      <label>{col.replace('_', ' ')}</label>
+                      <label>{formatLabel(col)}</label>
                       <select name={col} value={formData[col]} onChange={handleInputChange}>
                         {metadata.cat_options[col].map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
@@ -115,16 +126,22 @@ function App() {
                   ))}
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-divider" />
+
+                <div className="form-section-label">
+                  <Landmark size={16} color="var(--text-secondary)" />
+                  <span>Financial Details</span>
+                </div>
+                <div className="form-grid">
                   {metadata.num_cols.map(col => (
                     <div key={col} className="form-group">
-                      <label>{col.replace('_', ' ')}</label>
+                      <label>{formatLabel(col)}</label>
                       <input
                         type="number"
                         name={col}
                         value={formData[col]}
                         onChange={handleInputChange}
-                        placeholder={`Enter ${col.replace('_', ' ')}`}
+                        placeholder={`Enter ${formatLabel(col).toLowerCase()}`}
                         required
                       />
                     </div>

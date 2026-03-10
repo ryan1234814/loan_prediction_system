@@ -1,0 +1,266 @@
+================================================================================
+              AI LOAN PREDICTION SYSTEM - SAMPLE TEST CASES
+================================================================================
+
+These test cases cover a diverse range of applicant profiles and produce
+varying prediction outputs (Approved/Rejected with different probabilities).
+
+Fields:
+  - Gender:            Male / Female
+  - Married:           Yes / No
+  - Dependents:        0, 1, 2, 3+
+  - Education:         Graduate / Not Graduate
+  - Self_Employed:     Yes / No
+  - Property_Area:     Urban / Semiurban / Rural
+  - ApplicantIncome:   Monthly income of applicant (numeric)
+  - CoapplicantIncome: Monthly income of co-applicant (numeric)
+  - LoanAmount:        Loan amount in thousands (numeric)
+  - Loan_Amount_Term:  Term of loan in months (numeric)
+  - Credit_History:    1 = has credit history, 0 = no credit history
+
+================================================================================
+
+----------------------------------------------------------------------
+TEST CASE 1 — Strong Approval (High Income, Good Credit)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           Yes
+  Dependents:        0
+  Education:         Graduate
+  Self_Employed:     No
+  Property_Area:     Urban
+  ApplicantIncome:   8000
+  CoapplicantIncome: 3000
+  LoanAmount:        150
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~95.5%
+
+----------------------------------------------------------------------
+TEST CASE 2 — Strong Rejection (Low Income, No Credit History)
+----------------------------------------------------------------------
+  Gender:            Female
+  Married:           No
+  Dependents:        3+
+  Education:         Not Graduate
+  Self_Employed:     Yes
+  Property_Area:     Rural
+  ApplicantIncome:   1500
+  CoapplicantIncome: 0
+  LoanAmount:        200
+  Loan_Amount_Term:  120
+  Credit_History:    0
+
+  >> Expected Output: REJECTED | Probability: ~0.9%
+
+----------------------------------------------------------------------
+TEST CASE 3 — Approved (Semiurban, Moderate Income)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           No
+  Dependents:        1
+  Education:         Graduate
+  Self_Employed:     No
+  Property_Area:     Semiurban
+  ApplicantIncome:   3500
+  CoapplicantIncome: 1500
+  LoanAmount:        120
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~91.2%
+
+----------------------------------------------------------------------
+TEST CASE 4 — Rejected (No Credit History, High Loan)
+----------------------------------------------------------------------
+  Gender:            Female
+  Married:           Yes
+  Dependents:        2
+  Education:         Not Graduate
+  Self_Employed:     No
+  Property_Area:     Rural
+  ApplicantIncome:   2000
+  CoapplicantIncome: 0
+  LoanAmount:        300
+  Loan_Amount_Term:  360
+  Credit_History:    0
+
+  >> Expected Output: REJECTED | Probability: ~10.0%
+
+----------------------------------------------------------------------
+TEST CASE 5 — Rejected (High Income BUT No Credit History)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           Yes
+  Dependents:        0
+  Education:         Graduate
+  Self_Employed:     Yes
+  Property_Area:     Urban
+  ApplicantIncome:   12000
+  CoapplicantIncome: 5000
+  LoanAmount:        400
+  Loan_Amount_Term:  360
+  Credit_History:    0
+
+  >> Expected Output: REJECTED | Probability: ~16.3%
+
+----------------------------------------------------------------------
+TEST CASE 6 — Approved (Female Graduate, Semiurban)
+----------------------------------------------------------------------
+  Gender:            Female
+  Married:           Yes
+  Dependents:        1
+  Education:         Graduate
+  Self_Employed:     No
+  Property_Area:     Semiurban
+  ApplicantIncome:   4500
+  CoapplicantIncome: 2000
+  LoanAmount:        130
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~95.3%
+
+----------------------------------------------------------------------
+TEST CASE 7 — Rejected (Not Graduate, Rural, Short Term)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           No
+  Dependents:        0
+  Education:         Not Graduate
+  Self_Employed:     No
+  Property_Area:     Rural
+  ApplicantIncome:   2500
+  CoapplicantIncome: 0
+  LoanAmount:        80
+  Loan_Amount_Term:  84
+  Credit_History:    1
+
+  >> Expected Output: REJECTED | Probability: ~23.7%
+
+----------------------------------------------------------------------
+TEST CASE 8 — Approved (Self Employed, Urban, Good Credit)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           Yes
+  Dependents:        3+
+  Education:         Graduate
+  Self_Employed:     Yes
+  Property_Area:     Urban
+  ApplicantIncome:   6000
+  CoapplicantIncome: 0
+  LoanAmount:        250
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~98.1%
+
+----------------------------------------------------------------------
+TEST CASE 9 — Strong Rejection (Female, Self Employed, No Credit)
+----------------------------------------------------------------------
+  Gender:            Female
+  Married:           No
+  Dependents:        0
+  Education:         Not Graduate
+  Self_Employed:     Yes
+  Property_Area:     Semiurban
+  ApplicantIncome:   3000
+  CoapplicantIncome: 0
+  LoanAmount:        100
+  Loan_Amount_Term:  180
+  Credit_History:    0
+
+  >> Expected Output: REJECTED | Probability: ~1.9%
+
+----------------------------------------------------------------------
+TEST CASE 10 — Approved (High Coapplicant Income)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           Yes
+  Dependents:        2
+  Education:         Graduate
+  Self_Employed:     No
+  Property_Area:     Semiurban
+  ApplicantIncome:   5000
+  CoapplicantIncome: 4000
+  LoanAmount:        200
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~94.0%
+
+----------------------------------------------------------------------
+TEST CASE 11 — Approved (Moderate Profile, Rural)
+----------------------------------------------------------------------
+  Gender:            Female
+  Married:           No
+  Dependents:        1
+  Education:         Graduate
+  Self_Employed:     No
+  Property_Area:     Rural
+  ApplicantIncome:   3000
+  CoapplicantIncome: 1000
+  LoanAmount:        100
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~77.7%
+
+----------------------------------------------------------------------
+TEST CASE 12 — Borderline Rejection (Not Graduate, Self Employed)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           No
+  Dependents:        2
+  Education:         Not Graduate
+  Self_Employed:     Yes
+  Property_Area:     Semiurban
+  ApplicantIncome:   4000
+  CoapplicantIncome: 0
+  LoanAmount:        150
+  Loan_Amount_Term:  360
+  Credit_History:    1
+
+  >> Expected Output: REJECTED | Probability: ~43.7%
+
+----------------------------------------------------------------------
+TEST CASE 13 — Borderline Approval (Edge Case ~50%)
+----------------------------------------------------------------------
+  Gender:            Male
+  Married:           Yes
+  Dependents:        1
+  Education:         Not Graduate
+  Self_Employed:     No
+  Property_Area:     Rural
+  ApplicantIncome:   3500
+  CoapplicantIncome: 1200
+  LoanAmount:        180
+  Loan_Amount_Term:  240
+  Credit_History:    1
+
+  >> Expected Output: APPROVED | Probability: ~50.4%
+
+================================================================================
+SUMMARY TABLE
+================================================================================
+ Case | Prediction | Probability | Key Differentiator
+------|------------|-------------|--------------------------------------------
+  1   | Approved   |   ~95.5%    | Strong profile, high income, credit ✓
+  2   | Rejected   |    ~0.9%    | Weak on all factors, no credit ✗
+  3   | Approved   |   ~91.2%    | Graduate, semiurban, credit ✓
+  4   | Rejected   |   ~10.0%    | No credit, high loan vs low income
+  5   | Rejected   |   ~16.3%    | High income can't save no credit ✗
+  6   | Approved   |   ~95.3%    | Female graduate, good profile
+  7   | Rejected   |   ~23.7%    | Not graduate, rural, short term
+  8   | Approved   |   ~98.1%    | Self employed but good credit saves it
+  9   | Rejected   |    ~1.9%    | Multiple risk factors, no credit ✗
+  10  | Approved   |   ~94.0%    | High combined income, credit ✓
+  11  | Approved   |   ~77.7%    | Moderate profile, credit ✓ helps
+  12  | Rejected   |   ~43.7%    | Borderline — credit ✓ but risky profile
+  13  | Approved   |   ~50.4%    | Edge case — barely approved
+
+================================================================================
+NOTE: Probabilities are approximate and may vary slightly between runs due to
+SHAP computation. The prediction (Approved/Rejected) uses a 50% threshold.
+================================================================================
