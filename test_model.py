@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, LabelEncoder, RobustScaler
 from sklearn.impute import SimpleImputer
 import os
 
@@ -56,8 +56,16 @@ def run_test_predictions():
         # Handle unseen labels in test set if any (though usually we'd use a more robust encoder)
         X_test_df[col] = le.transform(X_test_df[col])
         
+    # Apply log transformation to highly skewed numeric columns
+    skewed_cols = ['ApplicantIncome', 'CoapplicantIncome', 'LoanAmount']
+    for col in skewed_cols:
+        if col in X_train_df.columns:
+            X_train_df[col] = np.log1p(X_train_df[col])
+        if col in X_test_df.columns:
+            X_test_df[col] = np.log1p(X_test_df[col])
+            
     # Scale
-    scaler = StandardScaler()
+    scaler = RobustScaler()
     X_train_scaled = scaler.fit_transform(X_train_df)
     X_test_scaled = scaler.transform(X_test_df)
     

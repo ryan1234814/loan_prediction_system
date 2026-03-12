@@ -22,22 +22,16 @@ The backend handles the machine learning inference, SHAP explanations, and model
     cd backend
     ```
 
-2.  **Activate the Virtual Environment:**
-    The project uses a pre-configured virtual environment named `ai_venv` located in the root directory.
+2.  **Install Dependencies globally:**
+    Since we are not using a virtual environment, install the required packages using:
     ```bash
-    # From the backend directory
-    source ../ai_venv/bin/activate
+    pip install -r ../requirements.txt --break-system-packages
     ```
+    *(Note: The `--break-system-packages` flag is required on macOS when using system Python with Homebrew.)*
 
-3.  **Install Dependencies (if not already installed):**
-    If the environment needs updating, run:
+3.  **Run the Flask Server:**
     ```bash
-    pip install -r ../requirements.txt
-    ```
-
-4.  **Run the Flask Server:**
-    ```bash
-    python app.py
+    python3 app.py
     ```
     - The server will start at `http://localhost:5001`.
     - **Note:** Ensure port 5001 is free. If not, the server will log a "Connection Refused" error in the frontend.

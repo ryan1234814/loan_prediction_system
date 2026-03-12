@@ -62,6 +62,12 @@ def test_probabilities():
         le = artifacts['label_encoders'][col]
         X[col] = le.transform(X[col].astype(str))
         
+    # Apply log transformation to highly skewed numeric columns
+    skewed_cols = ['ApplicantIncome', 'CoapplicantIncome', 'LoanAmount']
+    for col in skewed_cols:
+        if col in X.columns:
+            X[col] = np.log1p(X[col])
+            
     X_scaled = artifacts['scaler'].transform(X)
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32)
     

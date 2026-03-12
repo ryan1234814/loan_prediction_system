@@ -89,6 +89,12 @@ class LoanPredictor:
                 # If unknown category, use the most frequent (mode) or first class
                 X[col] = le.transform([le.classes_[0]] * len(X))
                 
+        # Apply log transformation to highly skewed numeric columns
+        skewed_cols = ['ApplicantIncome', 'CoapplicantIncome', 'LoanAmount']
+        for col in skewed_cols:
+            if col in X.columns:
+                X[col] = np.log1p(X[col])
+                
         # Scale
         X_scaled = self.artifacts['scaler'].transform(X)
         return X_scaled

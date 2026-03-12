@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.preprocessing import StandardScaler, LabelEncoder, RobustScaler
 from sklearn.impute import SimpleImputer
 import shap
 import matplotlib.pyplot as plt
@@ -53,7 +53,13 @@ def preprocess_data(train_path):
         X[col] = le.fit_transform(X[col])
         label_encoders[col] = le
         
-    scaler = StandardScaler()
+    # Apply log transformation to highly skewed numeric columns
+    skewed_cols = ['ApplicantIncome', 'CoapplicantIncome', 'LoanAmount']
+    for col in skewed_cols:
+        if col in X.columns:
+            X[col] = np.log1p(X[col])
+            
+    scaler = RobustScaler()
     X_scaled = scaler.fit_transform(X)
     
     artifacts = {
